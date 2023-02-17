@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fm-environments-cron-api-deployment
+  labels:
+    app: fm-environments-cron-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fm-environments-cron-api
+  template:
+    metadata:
+      labels:
+        app: fm-environments-cron-api
+    spec:
+      containers:
+      - name: fm-environments-cron-api
+        image: kuzyacat/fm-environments-cron-api
+        ports:
+        - containerPort: 3002
+        env:
+        - name: DB_NAME
+          valueFrom:
+            secretKeyRef:
+              name: mongo-secret
+              key: mongo-user
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postres-secret
+              key: mongo-password 
+        - name: DB_URL
+          valueFrom:
+            configMapKeyRef:
+              name: mongo-config
+              key: mongo-url
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fm-environments-cron-service
+spec:
+  type: NodePort
+  selector:
+    app: fm-environments-cron
+  ports:
+    - protocol: TCP
+      port: 3002
+      targetPort: 3002
+      nodePort: 30102
